@@ -180,4 +180,5 @@ def show_expenses():
     return render_template("expenses.html", expenses=expenses)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
+
