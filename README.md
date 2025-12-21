@@ -72,9 +72,6 @@ Contributions are welcome! Please open an issue or submit a pull request with a 
 4. Push to the branch: `git push origin feature/your-feature`
 5. Open a pull request
 
-## License
-
-Specify your license here (e.g., MIT). If unsure, use: MIT
 
 ## Contact
 
