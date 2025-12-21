@@ -5,13 +5,20 @@ from datetime import date
 app = Flask(__name__)
 
 # -------------------- DATABASE CONNECTION --------------------
+import os
+
 def get_db_connection():
     return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="NewPassword123!",
-        database="expense_tracker"
+        host=os.environ.get("MYSQLHOST"),
+        user=os.environ.get("MYSQLUSER"),
+        password=os.environ.get("MYSQLPASSWORD"),
+        database=os.environ.get("MYSQLDATABASE"),
+        port=os.environ.get("MYSQLPORT")
     )
+@app.route("/health")
+def health():
+    return "App is running"
+
 
 # -------------------- DASHBOARD --------------------
 @app.route("/")
