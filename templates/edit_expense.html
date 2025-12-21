@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Expense</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="page-container">
+    <div class="content-box">
+
+        <h1>Edit Expense</h1>
+
+        <form method="POST">
+            <label>Title</label>
+            <input type="text" name="title" value="{{ expense.title }}" required>
+
+            <label>Amount</label>
+            <input type="number" step="0.01" name="amount" value="{{ expense.amount }}" required>
+
+            <label>Category</label>
+            <select name="category">
+                <option {% if expense.category=='Food' %}selected{% endif %}>Food</option>
+                <option {% if expense.category=='Travel' %}selected{% endif %}>Travel</option>
+                <option {% if expense.category=='Rent' %}selected{% endif %}>Rent</option>
+                <option {% if expense.category=='Education' %}selected{% endif %}>Education</option>
+                <option {% if expense.category=='Groceries' %}selected{% endif %}>Groceries</option>
+                <option {% if expense.category=='Personal' %}selected{% endif %}>Personal</option>
+                <option {% if expense.category=='Others' %}selected{% endif %}>Others</option>
+            </select>
+
+            <label>Date</label>
+            <input type="date" name="date" value="{{ expense.expense_date }}" required>
+
+            <button type="submit">Update Expense</button>
+        </form>
+
+        <div class="footer-links">
+            <a href="/expenses">Back to Expenses</a>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    if (localStorage.getItem("theme") === "dark") {
+        document.body.classList.add("dark");
+    }
+</script>
+
+</body>
+</html>

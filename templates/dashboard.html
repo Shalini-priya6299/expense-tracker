@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Expense Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="page-container">
+
+    <!-- TOP BAR -->
+    <div class="top-bar">
+        <h1>Expense Dashboard</h1>
+
+        <form method="GET" style="display:flex; gap:10px;">
+            <select name="month">
+                {% for m in range(1,13) %}
+                <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>
+                    {{ ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][m-1] }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <select name="year">
+                {% for y in range(min_year, max_year) %}
+                <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>
+                    {{ y }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">View</button>
+        </form>
+
+        <div>
+            <a href="/add" class="nav-btn">➕ Add Expense</a>
+            <a href="/expenses" class="nav-btn">📋 All Expenses</a>
+            <button id="modeToggle">🌙 Dark Mode</button>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD -->
+    <div class="dashboard-layout">
+
+        <!-- LEFT COLUMN (UNCHANGED) -->
+        <div class="dashboard-left">
+
+            <div class="card-container">
+                <div class="dashboard-card">
+                    <h3>Total Spent ({{ month_label }})</h3>
+                    <p class="big-text">₹ {{ total_expense }}</p>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3>Monthly Insight</h3>
+                    {% if top_category_name %}
+                        <p>Highest spending:</p>
+                        <strong>{{ top_category_name }}</strong>
+                        <p class="big-text">₹ {{ top_category_amount }}</p>
+                    {% else %}
+                        <p>No data</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- DONUT (LEFT) -->
+            <div class="chart-section">
+                <h2>Category-wise Distribution</h2>
+                <canvas id="expenseChart"></canvas>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="dashboard-right">
+
+            <!-- 🔹 COMPARISON GRAPH (TOP RIGHT) -->
+            <div class="chart-section">
+                <h2>Current vs Previous Month</h2>
+                <canvas id="comparisonChart"></canvas>
+            </div>
+
+            <!-- 🔹 MONTHLY BUDGET (BOTTOM RIGHT) -->
+            <div class="dashboard-card">
+                <h3>Monthly Budget</h3>
+
+                <form method="POST" action="/set_budget">
+                    <input type="number" name="budget" required>
+                    <button type="submit">Save Budget</button>
+                </form>
+
+                {% if budget_amount %}
+                    <p>Budget: ₹ {{ budget_amount }}</p>
+                    {% if budget_exceeded %}
+                        <p style="color:red;">⚠ Exceeded</p>
+                    {% else %}
+                        <p style="color:green;">✓ Within budget</p>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- DARK MODE -->
+<script>
+if (localStorage.getItem("theme") === "dark") {
+    document.body.classList.add("dark");
+}
+document.getElementById("modeToggle").onclick = () => {
+    document.body.classList.toggle("dark");
+    localStorage.setItem(
+        "theme",
+        document.body.classList.contains("dark") ? "dark" : "light"
+    );
+};
+</script>
+
+<!-- DONUT CHART -->
+<script>
+new Chart(document.getElementById("expenseChart"), {
+    type: "doughnut",
+    data: {
+        labels: JSON.parse('{{ categories | safe }}'),
+        datasets: [{
+            data: JSON.parse('{{ amounts | safe }}'),
+            backgroundColor: [
+                "#6366f1",
+                "#22c55e",
+                "#f59e0b",
+                "#ef4444",
+                "#0ea5e9"
+            ]
+        }]
+    },
+    options: {
+        cutout: "70%",
+        plugins:{ legend:{ position:"bottom" } }
+    }
+});
+</script>
+
+<!-- LINE COMPARISON CHART -->
+<script>
+new Chart(document.getElementById("comparisonChart"), {
+    type: "line",
+    data: {
+        labels: JSON.parse('{{ days | safe }}'),
+        datasets: [
+            {
+                label: "{{ month_label }}",
+                data: JSON.parse('{{ current_data | safe }}'),
+                borderColor: "#6366f1",
+                backgroundColor: "rgba(99,102,241,0.2)",
+                tension: 0.4,
+                fill: true
+            },
+            {
+                label: "{{ prev_month_label }}",
+                data: JSON.parse('{{ prev_data | safe }}'),
+                borderColor: "#22c55e",
+                backgroundColor: "rgba(34,197,94,0.2)",
+                tension: 0.4,
+                fill: true
+            }
+        ]
+    },
+    options: {
+        plugins:{ legend:{ position:"bottom" } }
+    }
+});
+</script>
+
+</body>
+</html>

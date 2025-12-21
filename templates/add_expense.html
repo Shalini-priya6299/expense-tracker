@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Expense</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="page-container">
+
+    <div class="two-column-layout">
+
+        <!-- LEFT: FORM -->
+        <div class="content-box">
+            <h1>Add Expense</h1>
+
+            <form method="POST">
+
+                <label>
+                    <span class="label-text">Title</span>
+                    <input
+                        type="text"
+                        name="title"
+                        placeholder="e.g. Lunch, Bus fare"
+                        required
+                    >
+                </label>
+
+                <label>
+                    <span class="label-text">Amount</span>
+                    <input
+                        type="number"
+                        step="0.01"
+                        name="amount"
+                        required
+                    >
+                </label>
+
+                <label>
+                    <span class="label-text">Category</span>
+                    <select name="category" required>
+                        <option value="">Select category</option>
+                        <option>Food</option>
+                        <option>Travel</option>
+                        <option>Rent</option>
+                        <option>Education</option>
+                        <option>Entertainment</option>
+                        <option>Groceries</option>
+                        <option>Personal</option>
+                        <option>Others</option>
+                    </select>
+                </label>
+
+                <label>
+                    <span class="label-text">Date</span>
+                    <input
+                        type="date"
+                        name="date"
+                        required
+                    >
+                </label>
+
+                <button type="submit">Add Expense</button>
+            </form>
+
+        </div>
+
+        <!-- RIGHT: INFO / HELP CARD -->
+        <div class="info-box">
+            <h2>Why track expenses?</h2>
+            <p>
+                Recording daily expenses helps you understand
+                where your money goes and avoid unnecessary spending.
+            </p>
+
+            <ul>
+                <li>✔ Better budgeting</li>
+                <li>✔ Identify overspending</li>
+                <li>✔ Financial discipline</li>
+            </ul>
+
+            <div class="footer-links">
+                <a href="/">Dashboard</a><br><br>
+                <a href="/expenses">View All Expenses</a>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    if (localStorage.getItem("theme") === "dark") {
+        document.body.classList.add("dark");
+    }
+</script>
+
+</body>
+</html>
