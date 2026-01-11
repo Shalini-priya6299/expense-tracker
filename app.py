@@ -5,16 +5,15 @@ from datetime import date
 app = Flask(__name__)
 
 # -------------------- DATABASE CONNECTION --------------------
-import os
-
 def get_db_connection():
     return mysql.connector.connect(
-        host=os.environ.get("MYSQLHOST"),
-        user=os.environ.get("MYSQLUSER"),
-        password=os.environ.get("MYSQLPASSWORD"),
-        database=os.environ.get("MYSQLDATABASE"),
-        port=os.environ.get("MYSQLPORT")
+        host="localhost",
+        user="root",
+        password="NewPassword123!",
+        database="expense_tracker",
+        port=3306
     )
+
 @app.route("/health")
 def health():
     return "App is running"
@@ -40,7 +39,7 @@ def dashboard():
     """, (month, year))
     total_expense = cursor.fetchone()["total"] or 0
 
-    # ---------------- CATEGORY-WISE (DONUT) ----------------
+    # ---------------- CATEGORY-WISE ----------------
     cursor.execute("""
         SELECT category, SUM(amount) AS total
         FROM expenses
@@ -83,17 +82,13 @@ def dashboard():
     min_year = yr["min_year"] or year
     max_year = max(yr["max_year"] or year, year) + 1
 
-    # =========================================================
-    # NEW FEATURE: MONTH vs PREVIOUS MONTH (LINE CHART)
-    # =========================================================
-
+    # ---------------- MONTH vs PREVIOUS MONTH ----------------
     prev_month = month - 1
     prev_year = year
     if prev_month == 0:
         prev_month = 12
         prev_year -= 1
 
-    # Current month day-wise
     cursor.execute("""
         SELECT DAY(expense_date) AS day, SUM(amount) AS total
         FROM expenses
@@ -103,7 +98,6 @@ def dashboard():
     """, (month, year))
     current_rows = cursor.fetchall()
 
-    # Previous month day-wise
     cursor.execute("""
         SELECT DAY(expense_date) AS day, SUM(amount) AS total
         FROM expenses
@@ -143,24 +137,30 @@ def dashboard():
         prev_month_label=date(prev_year, prev_month, 1).strftime("%B %Y")
     )
 
-# -------------------- OTHER ROUTES (UNCHANGED) --------------------
+
+# -------------------- SET BUDGET --------------------
 @app.route("/set_budget", methods=["POST"])
 def set_budget():
     budget = request.form["budget"]
     conn = get_db_connection()
     cursor = conn.cursor()
+
     cursor.execute("DELETE FROM monthly_budget")
     cursor.execute("INSERT INTO monthly_budget (amount) VALUES (%s)", (budget,))
     conn.commit()
+
     cursor.close()
     conn.close()
     return redirect(url_for("dashboard"))
 
+
+# -------------------- ADD EXPENSE --------------------
 @app.route("/add", methods=["GET", "POST"])
 def add_expense():
     if request.method == "POST":
         conn = get_db_connection()
         cursor = conn.cursor()
+
         cursor.execute("""
             INSERT INTO expenses (title, amount, category, expense_date)
             VALUES (%s, %s, %s, %s)
@@ -170,22 +170,73 @@ def add_expense():
             request.form["category"],
             request.form["date"]
         ))
+
         conn.commit()
         cursor.close()
         conn.close()
         return redirect(url_for("show_expenses"))
+
     return render_template("add_expense.html")
 
+
+# -------------------- SHOW EXPENSES --------------------
 @app.route("/expenses")
 def show_expenses():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
+
     cursor.execute("SELECT * FROM expenses ORDER BY expense_date DESC")
     expenses = cursor.fetchall()
+
     cursor.close()
     conn.close()
     return render_template("expenses.html", expenses=expenses)
 
-if __name__ == "__main__":
-    app.run()
 
+# -------------------- EDIT EXPENSE --------------------
+@app.route("/edit/<int:id>", methods=["GET", "POST"])
+def edit_expense(id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    if request.method == "POST":
+        cursor.execute("""
+            UPDATE expenses
+            SET title=%s, amount=%s, category=%s, expense_date=%s
+            WHERE id=%s
+        """, (
+            request.form["title"],
+            request.form["amount"],
+            request.form["category"],
+            request.form["date"],
+            id
+        ))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return redirect(url_for("show_expenses"))
+
+    cursor.execute("SELECT * FROM expenses WHERE id=%s", (id,))
+    expense = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+    return render_template("edit_expense.html", expense=expense)
+
+
+# -------------------- DELETE EXPENSE --------------------
+@app.route("/delete/<int:id>")
+def delete_expense(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM expenses WHERE id=%s", (id,))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+    return redirect(url_for("show_expenses"))
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
